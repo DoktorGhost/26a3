@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"os/signal"
 	"sync"
@@ -23,6 +24,8 @@ func (r *RingIntBuffer) Push(el int) {
 	r.m.Lock()
 	defer r.m.Unlock()
 	if r.pos == r.size-1 {
+		l := log.New(os.Stdout, "buffer full ", log.Ldate|log.Ltime)
+		l.Println()
 		for i := 1; i <= r.size-1; i++ {
 			r.array[i-1] = r.array[i]
 		}
@@ -40,7 +43,8 @@ func (r *RingIntBuffer) Get() []int {
 	r.m.Lock()
 	defer r.m.Unlock()
 	var output []int = r.array[:r.pos]
-
+	l := log.New(os.Stdout, "get ", log.Ldate|log.Ltime)
+	l.Println()
 	r.pos = 0
 	return output
 }
@@ -61,6 +65,9 @@ func removeNegatives(currentChan <-chan int, nextChan chan<- int) {
 	for number := range currentChan {
 		if number >= 0 {
 			nextChan <- number
+		} else {
+			l := log.New(os.Stdout, "not buffered, negative number ", log.Ldate|log.Ltime)
+			l.Println(number)
 		}
 	}
 }
@@ -69,6 +76,9 @@ func removeDivThree(currentChan <-chan int, nextChan chan<- int) {
 	for number := range currentChan {
 		if number%3 != 0 {
 			nextChan <- number
+		} else {
+			l := log.New(os.Stdout, "not buffered, number is a multiple of 3 ", log.Ldate|log.Ltime)
+			l.Println(number)
 		}
 	}
 }
@@ -76,6 +86,8 @@ func removeDivThree(currentChan <-chan int, nextChan chan<- int) {
 func writeToBuffer(currentChan <-chan int, r *RingIntBuffer) {
 	for number := range currentChan {
 		r.Push(number)
+		l := log.New(os.Stdout, "write to buffer ", log.Ldate|log.Ltime)
+		l.Println(number)
 	}
 }
 
